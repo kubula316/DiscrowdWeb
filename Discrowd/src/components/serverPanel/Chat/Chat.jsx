@@ -215,6 +215,29 @@ export default function Chat({ activeChannel, messages, activeChannelName, id, s
              onDrop={handleDrop}
              onDragOver={preventDefault}
         >
+
+            <style>
+                {`
+                    .flex-1::-webkit-scrollbar {
+                        width: 8px; /* Szerokość scrollbara */
+                    }
+
+                    .flex-1::-webkit-scrollbar-track {
+                        background: #2b2d31; /* Kolor tła tracka */
+                        border-radius: 4px;
+                    }
+
+                    .flex-1::-webkit-scrollbar-thumb {
+                        background: #4f545c; /* Kolor thumba */
+                        border-radius: 4px;
+                    }
+
+                    .flex-1::-webkit-scrollbar-thumb:hover {
+                        background: #666b73; /* Kolor thumba po najechaniu */
+                    }
+                `}
+            </style>
+
             {/* Górny pasek */}
             <div className="h-12 border-b border-[#2b2d31] px-4 flex items-center justify-between bg-[#313338]">
                 <div className="flex items-center gap-2 text-white text-sm font-semibold">

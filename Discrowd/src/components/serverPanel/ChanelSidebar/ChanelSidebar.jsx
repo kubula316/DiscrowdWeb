@@ -5,7 +5,7 @@ import ServerHeader from "./ServerHeader.jsx";
 import {useState} from "react";
 import UserPanel from "./UserPanel.jsx";
 
-export default function ChannelSidebar({activeServerData, activeChannel, setActiveChannel, stompClient, id}) {
+export default function ChannelSidebar({activeServerData, activeChannel, setActiveChannel, stompClient, id, userData}) {
 
     if (!activeServerData || !activeServerData.categories) {
         return (
@@ -15,7 +15,7 @@ export default function ChannelSidebar({activeServerData, activeChannel, setActi
             </div>
         );
     }
-
+    console.log(activeServerData.categories);
     return (
         <div className="w-60 h-screen bg-[#2b2d31] text-white flex flex-col">
             <ServerHeader server={activeServerData} />
@@ -28,8 +28,6 @@ export default function ChannelSidebar({activeServerData, activeChannel, setActi
                         stompClient={stompClient}
                         id={id}
                     >
-
-
                         {category.textChannels.map((channel) => (
                             <TextChannel
                                 key={channel.id}
@@ -51,7 +49,7 @@ export default function ChannelSidebar({activeServerData, activeChannel, setActi
                 ))}
             </div>
 
-
+            {userData && <UserPanel user={userData} status={"ONLINE"} />}
         </div>
     );
 }

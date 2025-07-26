@@ -16,7 +16,8 @@ export default function ServerPanel() {
     const hasConnected = useRef(false);
     // State to manage the active server and the list of servers
     const { id } = useParams();
-    const [userId, setUserId] = useState(null)
+    const [userData, setUserData] = useState(null)
+    //console.log("USER" + userId);
     const [activeServer, setActiveServer] = useState(null);
     const [servers, setServers] = useState([]);
     // State to manage the Messages of channels
@@ -35,11 +36,21 @@ export default function ServerPanel() {
             [activeChannel]: updatedMessages
         }));
     }
-
-    //set loged in userId
     useEffect(() => {
-        setUserId(Cookies.get("userId"));
-    }, []);
+
+        const token = Cookies.get("token");
+
+        fetch(`http://localhost:9000/auth-service/user/data?id=${Cookies.get("userId")}`, {
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                setUserData(data);
+            })
+            .catch(() => setUserData(null));
+    }, [id]);
     // userServes data
     useEffect(() => {
 
@@ -52,7 +63,7 @@ export default function ServerPanel() {
         })
             .then(res => res.json())
             .then(data => {
-                console.log("Pobrane serwery:", data);
+                //console.log("Pobrane serwery:", data);
                 setServers(data);
                 setActiveServer(id)
             })
@@ -69,7 +80,7 @@ export default function ServerPanel() {
             })
                 .then(res => res.json())
                 .then(data => {
-                    console.log("Szczegóły serwera:", data);
+                    //console.log("Szczegóły serwera:", data);
                     setActiveServerData(data)
                     setActiveChannel(data.categories[0]?.textChannels[0]?.id || "awanturki");
                 })
@@ -88,7 +99,7 @@ export default function ServerPanel() {
             .then(res => res.json())
             .then(data => {
                 setMessagesCache(prev => ({ ...prev, [activeChannel]: data }));
-                console.log("Pobrane wiadomości:", data);
+                //console.log("Pobrane wiadomości:", data);
             });
     }, [activeChannel, messagesCache]);
     //Connect to WebSocket server
@@ -181,7 +192,7 @@ export default function ServerPanel() {
         <div className="flex flex-col h-screen min-h-0">
             <div className="flex flex-1 min-h-0">
                 <ServerSidebar activeServer={activeServer} setActiveServer={setActiveServer} servers={servers} hasConnected={{hasConnected}}/>
-                <ChannelSidebar activeServerData={activeServerData} activeChannel={activeChannel} setActiveChannel={setActiveChannel} stompClient={stompClient} id={id}/>
+                <ChannelSidebar userData={userData} activeServerData={activeServerData} activeChannel={activeChannel} setActiveChannel={setActiveChannel} stompClient={stompClient} id={id}/>
                 {activeServerData && <Chat onMessagesUpdate={handleMessageUpdate} memberships={activeServerData.memberships}  id={id} stompClient={stompClient} activeChannelName={activeChannelName} activeChannel={activeChannel} messages={messagesCache[activeChannel] || []}/>}
                 <RightSidebar activeServerData={activeServerData} userStatuses={userStatuses}/>
             </div>
