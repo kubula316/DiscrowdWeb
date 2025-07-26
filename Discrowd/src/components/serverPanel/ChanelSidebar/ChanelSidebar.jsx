@@ -3,6 +3,7 @@ import ChannelCategory from "./ChannelCategory.jsx";
 import TextChannel from "./TextChannel.jsx";
 import ServerHeader from "./ServerHeader.jsx";
 import {useState} from "react";
+import UserPanel from "./UserPanel.jsx";
 
 export default function ChannelSidebar({activeServerData, activeChannel, setActiveChannel, stompClient, id}) {
 
@@ -49,6 +50,8 @@ export default function ChannelSidebar({activeServerData, activeChannel, setActi
                     </ChannelCategory>
                 ))}
             </div>
+
+
         </div>
     );
 }

@@ -16,6 +16,7 @@ export default function ServerPanel() {
     const hasConnected = useRef(false);
     // State to manage the active server and the list of servers
     const { id } = useParams();
+    const [userId, setUserId] = useState(null)
     const [activeServer, setActiveServer] = useState(null);
     const [servers, setServers] = useState([]);
     // State to manage the Messages of channels
@@ -25,8 +26,20 @@ export default function ServerPanel() {
     const [activeServerData, setActiveServerData] = useState(null);
     // State to manage the STOMP client
     const [stompClient, setStompClient] = useState(null);
+    //State to manage user statuses
+    const [userStatuses, setUserStatuses] = useState(null)
 
+    function handleMessageUpdate(updatedMessages) {
+        setMessagesCache(prev => ({
+            ...prev,
+            [activeChannel]: updatedMessages
+        }));
+    }
 
+    //set loged in userId
+    useEffect(() => {
+        setUserId(Cookies.get("userId"));
+    }, []);
     // userServes data
     useEffect(() => {
 
@@ -97,6 +110,10 @@ export default function ServerPanel() {
                     console.log("Dodano wiadomość:", message);
                     const newMessage = JSON.parse(message.body);
                     setMessagesCache((prev) => {
+                        if (!prev[newMessage.channelId]) {
+                            // Jeśli kanał nie istnieje w cache, zignoruj wiadomość
+                            return prev;
+                        }
                         const existingMessages = prev[newMessage.channelId] || [];
                         return {
                             ...prev,
@@ -110,8 +127,42 @@ export default function ServerPanel() {
                     const newServerData = JSON.parse(server.body);
                     setActiveServerData(newServerData);
                 })
-                toast.success("connected");
 
+                client.subscribe(
+                    `/user/queue/initial.server.${id}.statuses`,
+                    (message) => {
+                        const initialServerStatuses = JSON.parse(message.body);
+                        console.log("Otrzymano początkowe statusy dla serwera:", initialServerStatuses);
+                        setUserStatuses(initialServerStatuses);
+                    },
+                    { id: `initial-server-statuses-sub-${id}` } // Unique ID for subscription
+                );
+
+                client.subscribe(
+                    `/topic/server/${id}/status.updates`,
+                    (message) => {
+                        const updatedStatus = JSON.parse(message.body);
+                        console.log("Otrzymano aktualizację statusu serwera:", updatedStatus);
+
+                        setUserStatuses((prevStatuses) => {
+                            const newStatuses = { ...prevStatuses };
+                            // Remove if status is OFFLINE OR if the user's serverId is no longer this server
+                            if (updatedStatus.status === 'OFFLINE' || updatedStatus.serverId !== id) {
+                                delete newStatuses[updatedStatus.userId];
+                            } else {
+                                // Otherwise, update or add the user's status
+                                newStatuses[updatedStatus.userId] = updatedStatus;
+                            }
+                            return newStatuses;
+                        });
+                    },
+                    { id: `server-status-updates-sub-${id}` } // Unique ID for subscription
+                );
+                client.send(`/app/server/join`, {}, id);
+                console.log(`Sent /app/server/join message for serverId: ${id}.`);
+
+
+                toast.success("Połaćczono z serwerem!");
             });
         };
 
@@ -131,8 +182,8 @@ export default function ServerPanel() {
             <div className="flex flex-1 min-h-0">
                 <ServerSidebar activeServer={activeServer} setActiveServer={setActiveServer} servers={servers} hasConnected={{hasConnected}}/>
                 <ChannelSidebar activeServerData={activeServerData} activeChannel={activeChannel} setActiveChannel={setActiveChannel} stompClient={stompClient} id={id}/>
-                {activeServerData && <Chat memberships={activeServerData.memberships}  id={id} stompClient={stompClient} activeChannelName={activeChannelName} activeChannel={activeChannel} messages={messagesCache[activeChannel] || []}/>}
-                <RightSidebar activeServerData={activeServerData}/>
+                {activeServerData && <Chat onMessagesUpdate={handleMessageUpdate} memberships={activeServerData.memberships}  id={id} stompClient={stompClient} activeChannelName={activeChannelName} activeChannel={activeChannel} messages={messagesCache[activeChannel] || []}/>}
+                <RightSidebar activeServerData={activeServerData} userStatuses={userStatuses}/>
             </div>
         </div>
     );

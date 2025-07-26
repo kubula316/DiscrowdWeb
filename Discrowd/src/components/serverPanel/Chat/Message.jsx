@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function Message({ avatar, username, time, content }) {
+export default function Message({ avatar, username, time, content, imageUrl }) {
     return (
         <div className="flex items-start gap-3">
             <img
@@ -16,6 +16,13 @@ export default function Message({ avatar, username, time, content }) {
                 <p className="text-sm text-gray-200">
                     {content}
                 </p>
+                {imageUrl && (
+                    <img
+                        src={imageUrl}
+                        alt="Message Image"
+                        className="mt-2 rounded-md max-w-xs"
+                    />
+                )}
             </div>
         </div>
     );

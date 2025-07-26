@@ -26,6 +26,7 @@ function Login() {
             const data = await response.json();
             Cookies.set("token", data.token);
             Cookies.set("refreshToken", data.refreshToken);
+            Cookies.set("userId", data.userId);
             navigate("/select");
         } catch (err) {
             setError(err.message);
